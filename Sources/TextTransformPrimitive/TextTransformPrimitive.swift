@@ -78,6 +78,43 @@ public struct TextTransformPresentationState: Sendable, Equatable {
     }
 }
 
+public struct TextTransformProgress: Sendable, Equatable {
+    public var completedUnitCount: Int
+    public var totalUnitCount: Int
+
+    public var label: String {
+        "\(completedUnitCount)/\(totalUnitCount)"
+    }
+
+    public init(
+        completedUnitCount: Int,
+        totalUnitCount: Int
+    ) {
+        self.completedUnitCount = completedUnitCount
+        self.totalUnitCount = totalUnitCount
+    }
+}
+
+public enum TextTransformDocumentPhase: Sendable, Equatable {
+    case idle
+    case transforming(TextTransformProgress?)
+    case complete(TextTransformProgress?)
+    case failed(String)
+}
+
+public struct TextTransformDocumentPresentationState: Sendable, Equatable {
+    public var phase: TextTransformDocumentPhase
+    public var showsContent: Bool
+
+    public init(
+        phase: TextTransformDocumentPhase = .idle,
+        showsContent: Bool = false
+    ) {
+        self.phase = phase
+        self.showsContent = showsContent
+    }
+}
+
 @MainActor
 public final class TextTransformController: ObservableObject {
     @Published public private(set) var presentationState = TextTransformPresentationState()
@@ -154,6 +191,187 @@ public final class TextTransformController: ObservableObject {
     public func cancel() {
         transformTask?.cancel()
         presentationState.isTransforming = false
+    }
+}
+
+public struct TextTransformDocumentPanel<Content: View>: View {
+    public let title: String
+    public let metadata: String?
+    public let systemImage: String
+    public let emptyTitle: String
+    public let emptySystemImage: String
+    public let loadingTitle: String
+    public let backgroundColor: Color
+    public let horizontalPadding: CGFloat
+    public let presentationState: TextTransformDocumentPresentationState
+
+    @Environment(\.readerChromeTheme) private var theme
+
+    private let content: Content
+
+    public init(
+        title: String,
+        metadata: String? = nil,
+        systemImage: String = "wand.and.stars",
+        emptyTitle: String = "Transform output will appear here",
+        emptySystemImage: String = "wand.and.stars",
+        loadingTitle: String = "Transforming…",
+        backgroundColor: Color = .clear,
+        horizontalPadding: CGFloat = 16,
+        presentationState: TextTransformDocumentPresentationState,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.title = title
+        self.metadata = metadata
+        self.systemImage = systemImage
+        self.emptyTitle = emptyTitle
+        self.emptySystemImage = emptySystemImage
+        self.loadingTitle = loadingTitle
+        self.backgroundColor = backgroundColor
+        self.horizontalPadding = horizontalPadding
+        self.presentationState = presentationState
+        self.content = content()
+    }
+
+    public var body: some View {
+        VStack(spacing: 0) {
+            header
+
+            Divider()
+
+            bodyContent
+                .background(backgroundColor)
+        }
+    }
+
+    private var header: some View {
+        HStack(spacing: theme.spacing.small) {
+            Image(systemName: systemImage)
+                .font(theme.typography.callout)
+                .foregroundStyle(theme.colors.secondaryText)
+
+            Text(title)
+                .font(theme.typography.callout)
+                .foregroundStyle(theme.colors.secondaryText)
+
+            if let metadata {
+                Text(metadata)
+                    .font(theme.typography.caption)
+                    .foregroundStyle(theme.colors.tertiaryText)
+            }
+
+            Spacer()
+
+            statusView
+        }
+        .padding(.horizontal, horizontalPadding)
+        .padding(.vertical, theme.spacing.control)
+        .background(backgroundColor)
+    }
+
+    @ViewBuilder
+    private var bodyContent: some View {
+        switch presentationState.phase {
+        case .failed(let message):
+            errorState(message)
+        case .transforming where !presentationState.showsContent:
+            loadingState
+        default:
+            if presentationState.showsContent {
+                content
+            } else {
+                emptyState
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var statusView: some View {
+        switch presentationState.phase {
+        case .idle:
+            EmptyView()
+        case .transforming(let progress):
+            HStack(spacing: theme.spacing.compact) {
+                ProgressView()
+                    .controlSize(.small)
+                    .tint(theme.colors.infoTint)
+
+                if let progress {
+                    Text(progress.label)
+                        .font(theme.typography.callout)
+                        .monospacedDigit()
+                        .foregroundStyle(theme.colors.infoTint)
+                } else {
+                    Text(loadingTitle)
+                        .font(theme.typography.callout)
+                        .foregroundStyle(theme.colors.infoTint)
+                }
+            }
+        case .complete:
+            HStack(spacing: theme.spacing.xSmall) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(theme.colors.infoTint)
+                    .font(theme.typography.callout)
+
+                Text("Complete")
+                    .font(theme.typography.callout)
+                    .foregroundStyle(theme.colors.infoTint)
+            }
+        case .failed:
+            HStack(spacing: theme.spacing.xSmall) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.yellow)
+                    .font(theme.typography.callout)
+
+                Text("Error")
+                    .font(theme.typography.callout)
+                    .foregroundStyle(theme.colors.secondaryText)
+            }
+        }
+    }
+
+    private var loadingState: some View {
+        VStack(spacing: theme.spacing.medium) {
+            ProgressView()
+                .controlSize(.small)
+                .tint(theme.colors.infoTint)
+
+            Text(loadingTitle)
+                .font(theme.typography.callout)
+                .foregroundStyle(theme.colors.secondaryText)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.top, theme.spacing.xLarge * 2)
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: theme.spacing.medium) {
+            Image(systemName: emptySystemImage)
+                .font(theme.typography.title3)
+                .foregroundStyle(theme.colors.tertiaryText)
+
+            Text(emptyTitle)
+                .font(theme.typography.callout)
+                .foregroundStyle(theme.colors.tertiaryText)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.top, theme.spacing.xLarge * 2)
+    }
+
+    private func errorState(_ message: String) -> some View {
+        VStack(spacing: theme.spacing.medium) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(theme.typography.title3)
+                .foregroundStyle(.yellow)
+
+            Text(message)
+                .font(theme.typography.callout)
+                .foregroundStyle(theme.colors.secondaryText)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, theme.spacing.xLarge)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.top, theme.spacing.xLarge * 2)
     }
 }
 

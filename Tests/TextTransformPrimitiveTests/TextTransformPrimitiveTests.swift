@@ -1,5 +1,6 @@
 import Testing
 @testable import TextTransformPrimitive
+import SwiftUI
 
 private struct StubTextTransformService: TextTransformService {
     let chunks: [TextTransformChunk]
@@ -44,6 +45,15 @@ private struct StubTextTransformService: TextTransformService {
     #expect(state.errorDescription == nil)
 }
 
+@Test func textTransformDocumentPresentationStateDefaultsToIdle() {
+    let state = TextTransformDocumentPresentationState()
+    let progress = TextTransformProgress(completedUnitCount: 2, totalUnitCount: 5)
+
+    #expect(state.phase == .idle)
+    #expect(state.showsContent == false)
+    #expect(progress.label == "2/5")
+}
+
 @MainActor
 @Test func textTransformViewsPublicSurfaceLoads() {
     let options = [
@@ -74,4 +84,16 @@ private struct StubTextTransformService: TextTransformService {
         selectedOptionID: .constant("es"),
         onToggleRequested: {}
     )
+
+    _ = TextTransformDocumentPanel(
+        title: "Translated to Spanish",
+        presentationState: TextTransformDocumentPresentationState(
+            phase: .transforming(
+                TextTransformProgress(completedUnitCount: 1, totalUnitCount: 3)
+            ),
+            showsContent: true
+        )
+    ) {
+        EmptyView()
+    }
 }
