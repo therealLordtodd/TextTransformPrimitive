@@ -202,7 +202,7 @@ public struct TextTransformDocumentPanel<Content: View>: View {
     public let emptySystemImage: String
     public let loadingTitle: String
     public let backgroundColor: Color
-    public let horizontalPadding: CGFloat
+    public let horizontalPadding: CGFloat?
     public let presentationState: TextTransformDocumentPresentationState
 
     @Environment(\.readerChromeTheme) private var theme
@@ -217,7 +217,7 @@ public struct TextTransformDocumentPanel<Content: View>: View {
         emptySystemImage: String = "wand.and.stars",
         loadingTitle: String = "Transforming…",
         backgroundColor: Color = .clear,
-        horizontalPadding: CGFloat = 16,
+        horizontalPadding: CGFloat? = nil,
         presentationState: TextTransformDocumentPresentationState,
         @ViewBuilder content: () -> Content
     ) {
@@ -264,7 +264,7 @@ public struct TextTransformDocumentPanel<Content: View>: View {
 
             statusView
         }
-        .padding(.horizontal, horizontalPadding)
+        .padding(.horizontal, resolvedHorizontalPadding)
         .padding(.vertical, theme.spacing.control)
         .background(backgroundColor)
     }
@@ -320,7 +320,7 @@ public struct TextTransformDocumentPanel<Content: View>: View {
         case .failed:
             HStack(spacing: theme.spacing.xSmall) {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.yellow)
+                    .foregroundStyle(theme.colors.warningTint)
                     .font(theme.typography.callout)
 
                 Text("Error")
@@ -341,7 +341,7 @@ public struct TextTransformDocumentPanel<Content: View>: View {
                 .foregroundStyle(theme.colors.secondaryText)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.top, theme.spacing.xLarge * 2)
+        .padding(.top, emptyStateTopPadding)
     }
 
     private var emptyState: some View {
@@ -355,14 +355,14 @@ public struct TextTransformDocumentPanel<Content: View>: View {
                 .foregroundStyle(theme.colors.tertiaryText)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.top, theme.spacing.xLarge * 2)
+        .padding(.top, emptyStateTopPadding)
     }
 
     private func errorState(_ message: String) -> some View {
         VStack(spacing: theme.spacing.medium) {
             Image(systemName: "exclamationmark.triangle")
                 .font(theme.typography.title3)
-                .foregroundStyle(.yellow)
+                .foregroundStyle(theme.colors.warningTint)
 
             Text(message)
                 .font(theme.typography.callout)
@@ -371,7 +371,15 @@ public struct TextTransformDocumentPanel<Content: View>: View {
                 .padding(.horizontal, theme.spacing.xLarge)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.top, theme.spacing.xLarge * 2)
+        .padding(.top, emptyStateTopPadding)
+    }
+
+    private var resolvedHorizontalPadding: CGFloat {
+        horizontalPadding ?? theme.spacing.large
+    }
+
+    private var emptyStateTopPadding: CGFloat {
+        theme.spacing.xLarge * theme.metrics.emptyStateTopPaddingMultiplier
     }
 }
 
@@ -455,7 +463,10 @@ public struct TextTransformPopupView: View {
             }
         }
         .padding(theme.spacing.large)
-        .frame(width: 420, height: 400)
+        .frame(
+            width: theme.metrics.transformPopupWidth,
+            height: theme.metrics.transformPopupHeight
+        )
         .task(id: selectedOptionID) {
             guard !selectedOptionID.isEmpty else { return }
             controller.transform(
@@ -484,7 +495,7 @@ public struct TextTransformPopupView: View {
                     }
                 }
                 .labelsHidden()
-                .frame(maxWidth: 180)
+                .frame(maxWidth: theme.metrics.transformOptionPickerMaxWidth)
             }
 
             Spacer()
@@ -505,6 +516,7 @@ public struct TextTransformPopupView: View {
             HStack(spacing: theme.spacing.small) {
                 ProgressView()
                     .controlSize(.small)
+                    .tint(theme.colors.infoTint)
                 Text("Transforming…")
                     .font(theme.typography.callout)
                     .foregroundStyle(theme.colors.secondaryText)
@@ -514,7 +526,7 @@ public struct TextTransformPopupView: View {
         } else if let errorDescription = controller.presentationState.errorDescription {
             Text(errorDescription)
                 .font(theme.typography.callout)
-                .foregroundStyle(.red)
+                .foregroundStyle(theme.colors.errorTint)
                 .textSelection(.enabled)
         } else {
             ScrollView {
@@ -634,6 +646,7 @@ public struct TextTransformModePopoverButton<AdditionalContent: View>: View {
                     .frame(maxWidth: .infinity)
                 }
                 .controlSize(.large)
+                .buttonStyle(.borderedProminent)
 
                 if !options.isEmpty {
                     Divider()
@@ -658,7 +671,7 @@ public struct TextTransformModePopoverButton<AdditionalContent: View>: View {
                 }
             }
             .padding(theme.spacing.large)
-            .frame(width: 300)
+            .frame(width: theme.metrics.transformModePopoverWidth)
         }
     }
 
