@@ -47,3 +47,7 @@ This primitive is the transform surface. Questions before extending:
 ## GitHub Repository Visibility
 
 - This repository is **private**. Do not change visibility without Todd's explicit request.
+
+## Performance posture
+
+Performance-relevant kit/primitive — public surface includes paths that hosts may exercise per-frame, per-row, or per-keystroke. Concurrency model is deliberate; allocations on the hot path are kept light. Theme/render seams stay value-type where possible. Reviewed 2026-04-29 (Speed & Clarity round 1, baseline pass); benchmark suite candidate for round 2.
