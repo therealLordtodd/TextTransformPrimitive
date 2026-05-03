@@ -1,6 +1,6 @@
 # TextTransformPrimitive
 
-> Claude Code loads this file automatically at the start of every session.
+AI agents should treat this file as the package-local operating guide.
 
 ## Package Purpose
 
@@ -29,6 +29,14 @@
 - **Replacement semantics:** `isReplacement: true` means "replace previously emitted text"; `false` means "append."
 - **Cancellation via stream termination.** No separate cancellation protocol.
 
+## Security Posture
+
+TextTransformPrimitive has no bundled credential, network, filesystem, database, persistence, or security-scoped resource surface. It does pass caller-selected text and caller-built `TextTransformContext` values into the host-supplied `TextTransformService`, and `TextTransformPopupView` can copy transformed output to the system pasteboard (`NSPasteboard` / `UIPasteboard`) on explicit user action. Hosts own provider authentication, prompt/context redaction, network policy, document writeback policy, pasteboard allow/deny rules, audit logging, and privacy handling for source text, prompts, parameters, transformed output, and errors.
+
+## Logging Posture
+
+This package has no logging dependency. Keep source free of `print()` and ad hoc diagnostics; hosts own logging around transform requests, provider failures, cancellation, pasteboard copies, and any document mutations that consume transformed output.
+
 ## Primary Documentation
 
 - Host-facing usage + API reference: `/Users/todd/Building - Apple/Packages/TextTransformPrimitive/README.md`
@@ -48,6 +56,14 @@ This primitive is the transform surface. Questions before extending:
 
 - This repository is **private**. Do not change visibility without Todd's explicit request.
 
-## Performance posture
+## Performance Posture
 
-Performance-relevant kit/primitive — public surface includes paths that hosts may exercise per-frame, per-row, or per-keystroke. Concurrency model is deliberate; allocations on the hot path are kept light. Theme/render seams stay value-type where possible. Reviewed 2026-04-29 (Speed & Clarity round 1, baseline pass); benchmark suite candidate for round 2.
+TextTransformPrimitive is a streaming UI primitive. Hot paths are option rendering, stream chunk accumulation, main-actor presentation updates, and result text rendering/copying. Keep transform implementations out of the primitive, preserve cancellation on view disappearance, and avoid buffering strategies that duplicate large transformed text more than necessary.
+
+## Verification
+
+Run before handoff:
+
+```bash
+swift test
+```
