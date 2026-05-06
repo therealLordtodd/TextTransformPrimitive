@@ -1,0 +1,9 @@
+"textTransform.document.emptyTitle" = "Transform output will appear here";
+"textTransform.status.transforming" = "Transforming…";
+"textTransform.status.complete" = "Complete";
+"textTransform.status.error" = "Error";
+"textTransform.popup.title" = "Transform";
+"textTransform.option.label" = "Target";
+"textTransform.source.disclosureTitle" = "Original";
+"textTransform.copyButton.title" = "Copy Result";
+"textTransform.closeButton.accessibilityLabel" = "Close %@";

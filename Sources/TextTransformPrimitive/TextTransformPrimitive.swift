@@ -195,12 +195,6 @@ public final class TextTransformController: ObservableObject {
     }
 }
 
-private enum TextTransformLocalized {
-    static var complete: LocalizedStringKey { "Complete" }
-    static var error: LocalizedStringKey { "Error" }
-    static var transforming: LocalizedStringKey { "Transforming…" }
-}
-
 public struct TextTransformDocumentPanel<Content: View>: View {
     public let title: String
     public let metadata: String?
@@ -220,9 +214,9 @@ public struct TextTransformDocumentPanel<Content: View>: View {
         title: String,
         metadata: String? = nil,
         systemImage: String = "wand.and.stars",
-        emptyTitle: String = String(localized: "Transform output will appear here"),
+        emptyTitle: String = TextTransformLocalization.documentEmptyTitle,
         emptySystemImage: String = "wand.and.stars",
-        loadingTitle: String = String(localized: "Transforming…"),
+        loadingTitle: String = TextTransformLocalization.transformingTitle,
         backgroundColor: Color = .clear,
         horizontalPadding: CGFloat? = nil,
         presentationState: TextTransformDocumentPresentationState,
@@ -320,7 +314,7 @@ public struct TextTransformDocumentPanel<Content: View>: View {
                     .foregroundStyle(theme.colors.infoTint)
                     .font(theme.typography.callout)
 
-                Text(TextTransformLocalized.complete)
+                Text(verbatim: TextTransformLocalization.completeStatusTitle)
                     .font(theme.typography.callout)
                     .foregroundStyle(theme.colors.infoTint)
             }
@@ -330,7 +324,7 @@ public struct TextTransformDocumentPanel<Content: View>: View {
                     .foregroundStyle(theme.colors.warningTint)
                     .font(theme.typography.callout)
 
-                Text(TextTransformLocalized.error)
+                Text(verbatim: TextTransformLocalization.errorStatusTitle)
                     .font(theme.typography.callout)
                     .foregroundStyle(theme.colors.secondaryText)
             }
@@ -408,11 +402,11 @@ public struct TextTransformPopupView: View {
 
     public init(
         sourceText: String,
-        title: String = String(localized: "Transform"),
-        optionLabel: String = String(localized: "Target"),
-        sourceDisclosureTitle: String = String(localized: "Original"),
+        title: String = TextTransformLocalization.popupTitle,
+        optionLabel: String = TextTransformLocalization.optionLabel,
+        sourceDisclosureTitle: String = TextTransformLocalization.sourceDisclosureTitle,
         systemImage: String = "wand.and.stars",
-        copyButtonTitle: String = String(localized: "Copy Result"),
+        copyButtonTitle: String = TextTransformLocalization.copyButtonTitle,
         options: [TextTransformOption],
         initialOptionID: String? = nil,
         service: any TextTransformService,
@@ -527,7 +521,7 @@ public struct TextTransformPopupView: View {
     }
 
     nonisolated static func closeButtonAccessibilityLabel(title: String) -> String {
-        String(localized: "Close \(title)")
+        TextTransformLocalization.closeButtonAccessibilityLabel(title: title)
     }
 
     @ViewBuilder
@@ -537,7 +531,7 @@ public struct TextTransformPopupView: View {
                 ProgressView()
                     .controlSize(.small)
                     .tint(theme.colors.infoTint)
-                Text(TextTransformLocalized.transforming)
+                Text(verbatim: TextTransformLocalization.transformingTitle)
                     .font(theme.typography.callout)
                     .foregroundStyle(theme.colors.secondaryText)
             }

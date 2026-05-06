@@ -4,6 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "TextTransformPrimitive",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v13),
         .iOS(.v15),
@@ -22,6 +23,9 @@ let package = Package(
             name: "TextTransformPrimitive",
             dependencies: [
                 .product(name: "ReaderChromeThemePrimitive", package: "ReaderChromeThemePrimitive"),
+            ],
+            resources: [
+                .process("Resources"),
             ]
         ),
         .testTarget(

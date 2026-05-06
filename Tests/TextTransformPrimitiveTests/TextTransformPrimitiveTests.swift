@@ -55,6 +55,14 @@ private struct StubTextTransformService: TextTransformService {
 }
 
 @Test func textTransformPopupCloseButtonAccessibilityLabelIncludesTitle() {
+    #expect(TextTransformLocalization.popupTitle == "Transform")
+    #expect(TextTransformLocalization.optionLabel == "Target")
+    #expect(TextTransformLocalization.sourceDisclosureTitle == "Original")
+    #expect(TextTransformLocalization.copyButtonTitle == "Copy Result")
+    #expect(TextTransformLocalization.documentEmptyTitle == "Transform output will appear here")
+    #expect(TextTransformLocalization.transformingTitle == "Transforming…")
+    #expect(TextTransformLocalization.completeStatusTitle == "Complete")
+    #expect(TextTransformLocalization.errorStatusTitle == "Error")
     #expect(TextTransformPopupView.closeButtonAccessibilityLabel(title: "Transform") == "Close Transform")
     #expect(TextTransformPopupView.closeButtonAccessibilityLabel(title: "Translate") == "Close Translate")
 }
