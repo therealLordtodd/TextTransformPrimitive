@@ -1,5 +1,21 @@
 # TextTransformPrimitive
 
+## Xcode Build Stall Recovery
+
+If an Xcode or `xcodebuild` build appears stalled with no useful progress, run the global build doctor before rebooting:
+
+```sh
+xcode-build-doctor
+```
+
+When it reports old stuck compiler probes for this project, clear only this project's stuck build-service tree:
+
+```sh
+xcode-build-doctor --project "TextTransformPrimitive" --sample --fix
+```
+
+Use `--dry-run` first when other legitimate builders may be active. Avoid `--all --fix` unless Todd explicitly wants every active Xcode build stopped. If the doctor reports no stuck probes, investigate the build normally (compiler/package/cache/project error).
+
 AI agents should treat this file as the package-local operating guide.
 
 ## Package Purpose
