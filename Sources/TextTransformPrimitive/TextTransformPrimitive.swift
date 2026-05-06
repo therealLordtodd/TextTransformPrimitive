@@ -1,5 +1,6 @@
-import ReaderChromeThemePrimitive
+import Foundation
 import SwiftUI
+import ReaderChromeThemePrimitive
 
 #if os(macOS)
 import AppKit
@@ -194,6 +195,12 @@ public final class TextTransformController: ObservableObject {
     }
 }
 
+private enum TextTransformLocalized {
+    static var complete: LocalizedStringKey { "Complete" }
+    static var error: LocalizedStringKey { "Error" }
+    static var transforming: LocalizedStringKey { "Transforming…" }
+}
+
 public struct TextTransformDocumentPanel<Content: View>: View {
     public let title: String
     public let metadata: String?
@@ -213,9 +220,9 @@ public struct TextTransformDocumentPanel<Content: View>: View {
         title: String,
         metadata: String? = nil,
         systemImage: String = "wand.and.stars",
-        emptyTitle: String = "Transform output will appear here",
+        emptyTitle: String = String(localized: "Transform output will appear here"),
         emptySystemImage: String = "wand.and.stars",
-        loadingTitle: String = "Transforming…",
+        loadingTitle: String = String(localized: "Transforming…"),
         backgroundColor: Color = .clear,
         horizontalPadding: CGFloat? = nil,
         presentationState: TextTransformDocumentPresentationState,
@@ -250,12 +257,12 @@ public struct TextTransformDocumentPanel<Content: View>: View {
                 .font(theme.typography.callout)
                 .foregroundStyle(theme.colors.secondaryText)
 
-            Text(title)
+            Text(verbatim: title)
                 .font(theme.typography.callout)
                 .foregroundStyle(theme.colors.secondaryText)
 
             if let metadata {
-                Text(metadata)
+                Text(verbatim: metadata)
                     .font(theme.typography.caption)
                     .foregroundStyle(theme.colors.tertiaryText)
             }
@@ -297,12 +304,12 @@ public struct TextTransformDocumentPanel<Content: View>: View {
                     .tint(theme.colors.infoTint)
 
                 if let progress {
-                    Text(progress.label)
+                    Text(verbatim: progress.label)
                         .font(theme.typography.callout)
                         .monospacedDigit()
                         .foregroundStyle(theme.colors.infoTint)
                 } else {
-                    Text(loadingTitle)
+                    Text(verbatim: loadingTitle)
                         .font(theme.typography.callout)
                         .foregroundStyle(theme.colors.infoTint)
                 }
@@ -313,7 +320,7 @@ public struct TextTransformDocumentPanel<Content: View>: View {
                     .foregroundStyle(theme.colors.infoTint)
                     .font(theme.typography.callout)
 
-                Text("Complete")
+                Text(TextTransformLocalized.complete)
                     .font(theme.typography.callout)
                     .foregroundStyle(theme.colors.infoTint)
             }
@@ -323,7 +330,7 @@ public struct TextTransformDocumentPanel<Content: View>: View {
                     .foregroundStyle(theme.colors.warningTint)
                     .font(theme.typography.callout)
 
-                Text("Error")
+                Text(TextTransformLocalized.error)
                     .font(theme.typography.callout)
                     .foregroundStyle(theme.colors.secondaryText)
             }
@@ -336,7 +343,7 @@ public struct TextTransformDocumentPanel<Content: View>: View {
                 .controlSize(.small)
                 .tint(theme.colors.infoTint)
 
-            Text(loadingTitle)
+            Text(verbatim: loadingTitle)
                 .font(theme.typography.callout)
                 .foregroundStyle(theme.colors.secondaryText)
         }
@@ -350,7 +357,7 @@ public struct TextTransformDocumentPanel<Content: View>: View {
                 .font(theme.typography.title3)
                 .foregroundStyle(theme.colors.tertiaryText)
 
-            Text(emptyTitle)
+            Text(verbatim: emptyTitle)
                 .font(theme.typography.callout)
                 .foregroundStyle(theme.colors.tertiaryText)
         }
@@ -364,7 +371,7 @@ public struct TextTransformDocumentPanel<Content: View>: View {
                 .font(theme.typography.title3)
                 .foregroundStyle(theme.colors.warningTint)
 
-            Text(message)
+            Text(verbatim: message)
                 .font(theme.typography.callout)
                 .foregroundStyle(theme.colors.secondaryText)
                 .multilineTextAlignment(.center)
@@ -401,11 +408,11 @@ public struct TextTransformPopupView: View {
 
     public init(
         sourceText: String,
-        title: String = "Transform",
-        optionLabel: String = "Target",
-        sourceDisclosureTitle: String = "Original",
+        title: String = String(localized: "Transform"),
+        optionLabel: String = String(localized: "Target"),
+        sourceDisclosureTitle: String = String(localized: "Original"),
         systemImage: String = "wand.and.stars",
-        copyButtonTitle: String = "Copy Result",
+        copyButtonTitle: String = String(localized: "Copy Result"),
         options: [TextTransformOption],
         initialOptionID: String? = nil,
         service: any TextTransformService,
@@ -433,12 +440,14 @@ public struct TextTransformPopupView: View {
 
             Divider()
 
-            DisclosureGroup(sourceDisclosureTitle) {
-                Text(sourceText)
+            DisclosureGroup {
+                Text(verbatim: sourceText)
                     .font(theme.typography.callout)
                     .foregroundStyle(theme.colors.secondaryText)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
+            } label: {
+                Text(verbatim: sourceDisclosureTitle)
             }
             .font(theme.typography.caption)
             .foregroundStyle(theme.colors.secondaryText)
@@ -456,7 +465,11 @@ public struct TextTransformPopupView: View {
                     Button {
                         copyToPasteboard(controller.presentationState.transformedText)
                     } label: {
-                        Label(copyButtonTitle, systemImage: "doc.on.doc")
+                        Label {
+                            Text(verbatim: copyButtonTitle)
+                        } icon: {
+                            Image(systemName: "doc.on.doc")
+                        }
                     }
                     .buttonStyle(.bordered)
                 }
@@ -484,15 +497,17 @@ public struct TextTransformPopupView: View {
             Image(systemName: systemImage)
                 .foregroundStyle(theme.colors.secondaryText)
 
-            Text(title)
+            Text(verbatim: title)
                 .font(theme.typography.title3)
                 .foregroundStyle(theme.colors.primaryText)
 
             if !options.isEmpty {
-                Picker(optionLabel, selection: $selectedOptionID) {
+                Picker(selection: $selectedOptionID) {
                     ForEach(options) { option in
-                        Text(option.title).tag(option.id)
+                        Text(verbatim: option.title).tag(option.id)
                     }
+                } label: {
+                    Text(verbatim: optionLabel)
                 }
                 .labelsHidden()
                 .frame(maxWidth: theme.metrics.transformOptionPickerMaxWidth)
@@ -507,12 +522,12 @@ public struct TextTransformPopupView: View {
                     .foregroundStyle(theme.colors.secondaryText)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(Self.closeButtonAccessibilityLabel(title: title))
+            .accessibilityLabel(Text(verbatim: Self.closeButtonAccessibilityLabel(title: title)))
         }
     }
 
     nonisolated static func closeButtonAccessibilityLabel(title: String) -> String {
-        "Close \(title)"
+        String(localized: "Close \(title)")
     }
 
     @ViewBuilder
@@ -522,20 +537,20 @@ public struct TextTransformPopupView: View {
                 ProgressView()
                     .controlSize(.small)
                     .tint(theme.colors.infoTint)
-                Text("Transforming…")
+                Text(TextTransformLocalized.transforming)
                     .font(theme.typography.callout)
                     .foregroundStyle(theme.colors.secondaryText)
             }
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.vertical, theme.spacing.xLarge)
         } else if let errorDescription = controller.presentationState.errorDescription {
-            Text(errorDescription)
+            Text(verbatim: errorDescription)
                 .font(theme.typography.callout)
                 .foregroundStyle(theme.colors.errorTint)
                 .textSelection(.enabled)
         } else {
             ScrollView {
-                Text(controller.presentationState.transformedText)
+                Text(verbatim: controller.presentationState.transformedText)
                     .font(theme.typography.callout)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -628,10 +643,11 @@ public struct TextTransformModePopoverButton<AdditionalContent: View>: View {
         Button {
             showingPopover.toggle()
         } label: {
-            Label(
-                isActive ? activeLabel : label,
-                systemImage: isActive ? activeSystemImage : systemImage
-            )
+            Label {
+                Text(verbatim: isActive ? activeLabel : label)
+            } icon: {
+                Image(systemName: isActive ? activeSystemImage : systemImage)
+            }
         }
         .foregroundStyle(
             isActive
@@ -646,7 +662,7 @@ public struct TextTransformModePopoverButton<AdditionalContent: View>: View {
                 } label: {
                     HStack {
                         Image(systemName: isActive ? "xmark" : systemImage)
-                        Text(isActive ? activeLabel : label)
+                        Text(verbatim: isActive ? activeLabel : label)
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -657,14 +673,16 @@ public struct TextTransformModePopoverButton<AdditionalContent: View>: View {
                     Divider()
 
                     VStack(alignment: .leading, spacing: theme.spacing.xSmall) {
-                        Text(optionLabel)
+                        Text(verbatim: optionLabel)
                             .font(theme.typography.caption)
                             .foregroundStyle(theme.colors.primaryText)
 
-                        Picker(optionLabel, selection: selectedOptionBinding) {
+                        Picker(selection: selectedOptionBinding) {
                             ForEach(options) { option in
-                                Text(option.title).tag(option.id)
+                                Text(verbatim: option.title).tag(option.id)
                             }
+                        } label: {
+                            Text(verbatim: optionLabel)
                         }
                         .labelsHidden()
                     }
