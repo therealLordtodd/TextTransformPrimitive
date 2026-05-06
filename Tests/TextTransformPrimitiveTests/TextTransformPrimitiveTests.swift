@@ -54,6 +54,11 @@ private struct StubTextTransformService: TextTransformService {
     #expect(progress.label == "2/5")
 }
 
+@Test func textTransformPopupCloseButtonAccessibilityLabelIncludesTitle() {
+    #expect(TextTransformPopupView.closeButtonAccessibilityLabel(title: "Transform") == "Close Transform")
+    #expect(TextTransformPopupView.closeButtonAccessibilityLabel(title: "Translate") == "Close Translate")
+}
+
 @MainActor
 @Test func textTransformViewsPublicSurfaceLoads() {
     let options = [

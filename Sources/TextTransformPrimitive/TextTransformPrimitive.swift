@@ -507,7 +507,12 @@ public struct TextTransformPopupView: View {
                     .foregroundStyle(theme.colors.secondaryText)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Self.closeButtonAccessibilityLabel(title: title))
         }
+    }
+
+    nonisolated static func closeButtonAccessibilityLabel(title: String) -> String {
+        "Close \(title)"
     }
 
     @ViewBuilder
